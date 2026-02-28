@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Editor de Catálogo JSON (Aulas)</title>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#121212;
+      --text:#f5f5f5;
+      --muted:#bdbdbd;
+      --border: rgba(255,255,255,.12);
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --primary:#e50914;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(900px 600px at 20% 0%, rgba(229,9,20,.18), transparent 60%),
+                  radial-gradient(700px 500px at 90% 10%, rgba(255,255,255,.06), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:18px}
+    .top{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      padding:12px 0 18px;
+    }
+    .brand{display:flex; gap:10px; align-items:center}
+    .badge{
+      background:var(--primary); padding:6px 10px; border-radius:12px; font-weight:900; letter-spacing:.6px;
+      box-shadow:0 18px 45px rgba(229,9,20,.20);
+    }
+    .title{font-weight:900}
+    .sub{color:var(--muted); font-size:13px; line-height:1.5}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--border);
+      background: rgba(18,18,18,.85);
+      border-radius:16px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.45);
+      padding:14px;
+    }
+    h2{margin:0 0 8px; font-size:16px}
+    label{display:block; font-size:12px; font-weight:800; margin:10px 0 6px; color:rgba(255,255,255,.86)}
+    input, textarea, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.35);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height: 330px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(229,9,20,.55);
+      box-shadow: 0 0 0 4px rgba(229,9,20,.12);
+    }
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    button{
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+    }
+    button:hover{background: rgba(255,255,255,.12)}
+    .primary{background: linear-gradient(135deg, rgba(229,9,20,1), rgba(255,59,48,.75)); border-color: rgba(229,9,20,.55)}
+    .primary:hover{filter:brightness(1.03)}
+    .ok{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10)}
+    .warn{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10)}
+    .bad{border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10)}
+    .msg{margin-top:12px; padding:12px; border-radius:12px; border:1px solid var(--border); display:none; font-size:13px; line-height:1.5}
+    .msg.show{display:block}
+    .help{color:rgba(255,255,255,.70); font-size:13px; line-height:1.55}
+    .mini{color:rgba(255,255,255,.60); font-size:12px; line-height:1.55}
+    code{background: rgba(255,255,255,.08); padding:2px 6px; border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="badge">PALMA</div>
+        <div>
+          <div class="title">Editor de Catálogo (catalog.json)</div>
+          <div class="sub">Adicionar aulas novas sem atualizar o APK (o app só precisa buscar este JSON online).</div>
+        </div>
+      </div>
+      <div class="sub">
+        Dica: Depois de “Baixar”, envie o arquivo para sua hospedagem e pronto.
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: form -->
+      <div class="card">
+        <h2>Adicionar nova aula</h2>
+        <p class="help">
+          Preencha e clique <b>Adicionar aula</b>. O JSON será validado automaticamente.
+        </p>
+
+        <label>ID (único, sem espaço)</label>
+        <input id="f_id" placeholder="aula-07" />
+
+        <div class="row">
+          <div>
+            <label>Título</label>
+            <input id="f_titulo" placeholder="Aula nova: ..." />
+          </div>
+          <div>
+            <label>Categoria</label>
+            <input id="f_categoria" placeholder="Aulas práticas" />
+          </div>
+        </div>
+
+        <label>Descrição</label>
+        <input id="f_descricao" placeholder="O que o aluno vai aprender nesta aula..." />
+
+        <label>videoUrl (HLS .m3u8 do Bunny)</label>
+        <input id="f_videoUrl" placeholder="https://SEU_PULLZONE.b-cdn.net/VIDEO_ID/playlist.m3u8" />
+
+        <div class="row">
+          <div>
+            <label>Ordem (número)</label>
+            <input id="f_ordem" type="number" placeholder="7" />
+          </div>
+          <div>
+            <label>Data (opcional)</label>
+            <input id="f_data" placeholder="2026-02-26" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnAdd">Adicionar aula</button>
+          <button class="warn" id="btnValidate">Validar JSON</button>
+          <button id="btnLoadSample">Carregar exemplo</button>
+          <button class="ok" id="btnDownload">Baixar catalog.json</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+
+        <p class="mini">
+          Regras: <br/>
+          • <b>ID não pode repetir</b><br/>
+          • <b>videoUrl precisa ser https</b> e conter <code>playlist.m3u8</code><br/>
+          • O arquivo final precisa ser um <b>array</b> (começa com <code>[</code> e termina com <code>]</code>)
+        </p>
+      </div>
+
+      <!-- RIGHT: JSON editor -->
+      <div class="card">
+        <h2>Seu catalog.json</h2>
+        <p class="help">
+          Cole aqui o conteúdo do seu <b>catalog.json</b> atual. Depois de adicionar, ele fica formatado e pronto para subir.
+        </p>
+        <textarea id="jsonArea" spellcheck="false"></textarea>
+        <p class="mini">
+          Você vai salvar esse arquivo na hospedagem como <code>catalog.json</code> (mesmo nome).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Helpers =====
+    function showMsg(type, text){
+      const el = document.getElementById("msg");
+      el.className = "msg show " + (type || "");
+      el.textContent = text;
+    }
+
+    function parseCatalog(){
+      const raw = document.getElementById("jsonArea").value.trim();
+      if (!raw) throw new Error("O campo do JSON está vazio. Cole seu catalog.json primeiro.");
+      let data;
+      try{
+        data = JSON.parse(raw);
+      }catch(e){
+        throw new Error("JSON inválido. Verifique vírgulas, aspas e colchetes [].");
+      }
+      if (!Array.isArray(data)){
+        throw new Error("O JSON precisa ser uma LISTA (array). Ele deve começar com [ e terminar com ].");
+      }
+      return data;
+    }
+
+    function pretty(obj){
+      return JSON.stringify(obj, null, 2);
+    }
+
+    function isValidHttpsUrl(u){
+      try{
+        const url = new URL(u);
+        return url.protocol === "https:";
+      }catch(e){
+        return false;
+      }
+    }
+
+    function validateItem(item, existingIds){
+      const required = ["id","titulo","videoUrl"];
+      for (const k of required){
+        if (!item[k] || String(item[k]).trim() === ""){
+          throw new Error(`Campo obrigatório faltando: ${k}`);
+        }
+      }
+
+      // id rules
+      const id = String(item.id).trim();
+      if (!/^[a-zA-Z0-9_-]+$/.test(id)){
+        throw new Error("ID inválido. Use apenas letras, números, _ e - (sem espaço). Ex: aula-07");
+      }
+      if (existingIds.has(id)){
+        throw new Error("Já existe uma aula com esse ID. Escolha outro.");
+      }
+
+      // videoUrl rules
+      const v = String(item.videoUrl).trim();
+      if (!isValidHttpsUrl(v)){
+        throw new Error("videoUrl inválida: precisa começar com https://");
+      }
+      if (!v.includes("playlist.m3u8")){
+        throw new Error("videoUrl precisa conter 'playlist.m3u8' (HLS).");
+      }
+
+      // ordem
+      if (item.ordem !== undefined && item.ordem !== null && item.ordem !== ""){
+        const n = Number(item.ordem);
+        if (!Number.isFinite(n) || n < 0){
+          throw new Error("Ordem inválida. Use um número (ex: 7).");
+        }
+        item.ordem = n;
+      } else {
+        delete item.ordem;
+      }
+
+      // limpeza básica
+      for (const k of Object.keys(item)){
+        if (typeof item[k] === "string") item[k] = item[k].trim();
+      }
+
+      return item;
+    }
+
+    function loadSample(){
+      const sample = [
+        {
+          "id": "aula-01",
+          "titulo": "Comece aqui",
+          "descricao": "Visão geral do curso e como usar a consultoria.",
+          "categoria": "Comece aqui",
+          "videoUrl": "https://SEU_PULLZONE.b-cdn.net/VIDEO_ID_1/playlist.m3u8",
+          "ordem": 1,
+          "data": "2026-02-01"
+        },
+        {
+          "id": "aula-02",
+          "titulo": "Aula prática 1",
+          "descricao": "Passo a passo completo.",
+          "categoria": "Aulas práticas",
+          "videoUrl": "https://SEU_PULLZONE.b-cdn.net/VIDEO_ID_2/playlist.m3u8",
+          "ordem": 2,
+          "data": "2026-02-05"
+        },
+        {
+          "id": "aula-03",
+          "titulo": "Consultoria: diagnóstico",
+          "descricao": "Como solicitar sua consultoria e o que enviar.",
+          "categoria": "Consultoria",
+          "videoUrl": "https://SEU_PULLZONE.b-cdn.net/VIDEO_ID_3/playlist.m3u8",
+          "ordem": 3,
+          "data": "2026-02-10"
+        }
+      ];
+      document.getElementById("jsonArea").value = pretty(sample);
+      showMsg("ok", "Exemplo carregado. Agora você pode editar e adicionar aulas.");
+    }
+
+    // ===== Buttons =====
+    document.getElementById("btnLoadSample").addEventListener("click", loadSample);
+
+    document.getElementById("btnValidate").addEventListener("click", ()=>{
+      try{
+        const data = parseCatalog();
+        // valida duplicados por id
+        const ids = new Set();
+        for (const it of data){
+          if (!it.id) throw new Error("Uma aula está sem 'id'.");
+          const id = String(it.id).trim();
+          if (ids.has(id)) throw new Error("ID duplicado no catálogo: " + id);
+          ids.add(id);
+          if (!it.videoUrl) throw new Error("A aula " + id + " está sem videoUrl.");
+        }
+        showMsg("ok", "JSON OK ✅ (array válido, sem IDs duplicados).");
+      }catch(e){
+        showMsg("bad", "Erro: " + e.message);
+      }
+    });
+
+    document.getElementById("btnAdd").addEventListener("click", ()=>{
+      try{
+        const catalog = parseCatalog();
+
+        const ids = new Set(catalog.map(x => String(x.id || "").trim()).filter(Boolean));
+
+        const item = {
+          id: document.getElementById("f_id").value,
+          titulo: document.getElementById("f_titulo").value,
+          descricao: document.getElementById("f_descricao").value,
+          categoria: document.getElementById("f_categoria").value,
+          videoUrl: document.getElementById("f_videoUrl").value,
+          ordem: document.getElementById("f_ordem").value,
+          data: document.getElementById("f_data").value
+        };
+
+        // remove vazios opcionais
+        if (!item.descricao) delete item.descricao;
+        if (!item.categoria) delete item.categoria;
+        if (!item.data) delete item.data;
+
+        const clean = validateItem(item, ids);
+        catalog.push(clean);
+
+        // ordena por "ordem" se existir
+        catalog.sort((a,b)=>{
+          const ao = (typeof a.ordem === "number") ? a.ordem : 999999;
+          const bo = (typeof b.ordem === "number") ? b.ordem : 999999;
+          return ao - bo;
+        });
+
+        document.getElementById("jsonArea").value = pretty(catalog);
+        showMsg("ok", "Aula adicionada ✅ Agora clique em “Baixar catalog.json” e envie pra hospedagem.");
+
+        // limpa campos
+        document.getElementById("f_id").value = "";
+        document.getElementById("f_titulo").value = "";
+        document.getElementById("f_descricao").value = "";
+        document.getElementById("f_categoria").value = "";
+        document.getElementById("f_videoUrl").value = "";
+        document.getElementById("f_ordem").value = "";
+        document.getElementById("f_data").value = "";
+      }catch(e){
+        showMsg("bad", "Erro: " + e.message);
+      }
+    });
+
+    document.getElementById("btnDownload").addEventListener("click", ()=>{
+      try{
+        const catalog = parseCatalog();
+        const content = pretty(catalog);
+        const blob = new Blob([content], {type: "application/json;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "catalog.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+        showMsg("ok", "Arquivo catalog.json baixado ✅ Agora envie para sua hospedagem.");
+      }catch(e){
+        showMsg("bad", "Erro: " + e.message);
+      }
+    });
+
+    // Start with sample to help
+    loadSample();
+  </script>
+</body>
+</html>
